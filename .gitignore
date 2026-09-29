@@ -27,3 +27,22 @@ wheels/
 
 static/images/
 static/videos/
+
+# Local runtime data and generated files
+.venv/
+logs/
+*.log
+*.db
+*.sqlite*
+reservations.json
+reservations.json.backup
+.pytest_cache/
+# Local runtime data and generated files
+.venv/
+logs/
+*.log
+*.db
+*.sqlite*
+reservations.json
+reservations.json.backup
+.pytest_cache/
