@@ -214,7 +214,7 @@ Bu proje özel kullanım için oluşturulmuştur.
 ## 👨‍💻 Destek
 
 Sorunlar veya öneriler için lütfen iletişime geçin:
-- Email: admin@example.com
+- Email: berkayseyman@gmail.com
 - Admin: Berkay Şeyman
 
 ---
