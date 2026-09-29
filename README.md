@@ -218,7 +218,7 @@ Backend ve yönetim panelindeki Berkay Seyman'a ait katkıların telif hakları 
 
 Sorunlar veya öneriler için lütfen iletişime geçin:
 - Email: berkayseyman@gmail.com
-- Admin: Berkay Şeyman
+- Admin: Berkay Seyman
 
 ---
 
