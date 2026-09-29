@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Backend/database implementation: Berkay Seyman (2026)
+# Copyright (c) 2026 Berkay Seyman. All rights reserved.
+# Commercial use of this backend requires prior written permission.
+
 """
 Database module for Bungalow Reservation System
 Handles SQLite operations for reservations

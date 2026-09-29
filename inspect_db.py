@@ -1,3 +1,6 @@
+# Backend utility: Berkay Seyman (2026)
+# Copyright (c) 2026 Berkay Seyman. All rights reserved.
+
 """
 SQLite Database Inspector
 Reservation database'ini incelemek için basit araç

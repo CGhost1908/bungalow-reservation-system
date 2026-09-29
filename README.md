@@ -207,9 +207,12 @@ Sistem her bungalov için ayrı tarih kontrolü yapar. Eğer hala sorun yaşıyo
 - [ ] Tarih aralığı kopyalama
 - [ ] Unit tests
 
-## 📝 Lisans
+## 📝 Geliştirici ve kullanım koşulları
 
-Bu proje özel kullanım için oluşturulmuştur.
+Bu repo, [CGhost1908/bungalow](https://github.com/CGhost1908/bungalow) frontend projesinin fork’udur. Rezervasyon sistemi backend'i, SQLite veritabanı entegrasyonu ve yönetim paneli **Berkay Seyman** tarafından geliştirilmiştir.
+
+Backend ve yönetim panelindeki Berkay Seyman'a ait katkıların telif hakları saklıdır (© 2026 Berkay Seyman). Bu kodun GitHub’da görüntülenebilmesi, bağımsız bir kullanım veya ticari kullanım izni verildiği anlamına gelmez. Backend'i veya yönetim panelini kendi projenizde kullanmak için önceden yazılı izin alın. Frontend ve diğer katkıların hakları kendi sahiplerine aittir.
+
 
 ## 👨‍💻 Destek
 

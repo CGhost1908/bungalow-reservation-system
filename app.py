@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+# Backend implementation: Berkay Seyman (2026)
+# Copyright (c) 2026 Berkay Seyman. All rights reserved.
+# Commercial use of this backend requires prior written permission.
+
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
 from datetime import datetime, timedelta
 import json
