@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
     <link rel="icon" href="{{ url_for('static', filename='images/logo.png') }}" type="image/x-icon">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/tr.js"></script>
     <title>Intense Bungalov - Rezervasyon</title>
 </head>
 <body>
@@ -84,7 +81,7 @@
 
                     <div class="form-group">
                         <label for="bungalow">Bungalov Türü *</label>
-                        <select id="bungalow" name="bungalow" required>
+                        <select id="bungalow" name="bungalow" required onchange="loadBookedDates()">
                             <option value="">Bir bungalov seçiniz</option>
                             <option value="Akasya">Akasya</option>
                             <option value="Ihlamur">Ihlamur</option>
@@ -109,12 +106,24 @@
 
             <!-- Right: Calendar -->
             <div class="calendar-section">
-                <h2>Tarih Seçimi</h2>
-                <input type="text" id="dateRange" name="dateRange" placeholder="Sağdaki takvimden tarih seçiniz" readonly>
+                <h2>📅 Tarih Seçimi</h2>
                 
+                <div class="date-inputs">
+                    <div class="date-input-group">
+                        <label for="checkInDate">Giriş Tarihi *</label>
+                        <input type="date" id="checkInDate" name="checkInDate" min="">
+                    </div>
+                    <div class="date-input-group">
+                        <label for="checkOutDate">Çıkış Tarihi *</label>
+                        <input type="date" id="checkOutDate" name="checkOutDate" min="">
+                    </div>
+                </div>
+
+                <div id="calendarWidget" class="calendar-widget"></div>
+
                 <div class="selected-dates" id="selectedDates">
-                    <p>Giriş Tarihi: <span id="checkInDisplaySpan">-</span></p>
-                    <p>Çıkış Tarihi: <span id="checkOutDisplaySpan">-</span></p>
+                    <p><strong>📍 Giriş Tarihi:</strong> <span id="checkInDisplaySpan">-</span></p>
+                    <p><strong>📍 Çıkış Tarihi:</strong> <span id="checkOutDisplaySpan">-</span></p>
                     <div class="night-count" id="nightCount"></div>
                 </div>
             </div>
@@ -122,110 +131,16 @@
     </div>
 
     <script>
-        let selectedDates = [];
+        let bookedDates = [];
+        let todayStr = '';
 
-        // Initialize calendar with range selection
-        flatpickr("#dateRange", {
-            mode: "range",
-            minDate: "today",
-            dateFormat: "d.m.Y",
-            locale: "tr",
-            inline: true,
-            onChange: function(selectedDates) {
-                if (selectedDates.length === 2) {
-                    const checkIn = selectedDates[0];
-                    const checkOut = selectedDates[1];
+        // Get today's date in YYYY-MM-DD format
+        function getTodayString() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
 
-                    // Format dates for backend (YYYY-MM-DD)
-                    const checkInStr = checkIn.toISOString().split('T')[0];
-                    const checkOutStr = checkOut.toISOString().split('T')[0];
-
-                    // Set hidden inputs
-                    document.getElementById('checkIn').value = checkInStr;
-                    document.getElementById('checkOut').value = checkOutStr;
-
-                    // Format dates for display (DD.MM.YYYY)
-                    const dayIn = String(checkIn.getDate()).padStart(2, '0');
-                    const monthIn = String(checkIn.getMonth() + 1).padStart(2, '0');
-                    const yearIn = checkIn.getFullYear();
-
-                    const dayOut = String(checkOut.getDate()).padStart(2, '0');
-                    const monthOut = String(checkOut.getMonth() + 1).padStart(2, '0');
-                    const yearOut = checkOut.getFullYear();
-
-                    document.getElementById('checkInDisplaySpan').textContent = `${dayIn}.${monthIn}.${yearIn}`;
-                    document.getElementById('checkOutDisplaySpan').textContent = `${dayOut}.${monthOut}.${yearOut}`;
-
-                    // Show selected dates
-                    document.getElementById('selectedDates').classList.add('active');
-
-                    // Calculate nights
-                    const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
-                    document.getElementById('nightCount').textContent = `${nights} Gece`;
-                }
-            }
-        });
-
-        document.getElementById('reservationForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Validate dates are selected
-            if (!document.getElementById('checkIn').value || !document.getElementById('checkOut').value) {
-                showError('Lütfen takvimden giriş ve çıkış tarihini seçiniz.');
-                return;
-            }
-
-            // Get form data
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                checkIn: document.getElementById('checkIn').value,
-                checkOut: document.getElementById('checkOut').value,
-                guests: document.getElementById('guests').value,
-                bungalow: document.getElementById('bungalow').value,
-                notes: document.getElementById('notes').value
-            };
-
-            // Show loading
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('successMessage').style.display = 'none';
-            document.getElementById('errorMessage').style.display = 'none';
-
-            try {
-                // Send to backend
-                const response = await fetch('/api/reservation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    // Success
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('successMessage').style.display = 'block';
-                    document.getElementById('reservationForm').reset();
-                    document.getElementById('selectedDates').classList.remove('active');
-                    
-                    // Hide success message after 5 seconds
-                    setTimeout(() => {
-                        document.getElementById('successMessage').style.display = 'none';
-                    }, 5000);
-                } else {
-                    showError(result.message || 'Bir hata oluştu. Lütfen tekrar deneyiniz.');
-                }
-            } catch (error) {
-                showError('Sunucuya bağlanılamadı. Lütfen tekrar deneyiniz.');
-                console.error('Error:', error);
-            }
-
-            document.getElementById('loading').style.display = 'none';
-        });
-
+        // Show error message
         function showError(message) {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('errorMessage').textContent = message;
@@ -236,19 +151,241 @@
             }, 5000);
         }
 
-        // Hamburger menu toggle
-        document.getElementById('hamburgerBtn').addEventListener('click', function() {
-            const mobileMenu = document.getElementById('mobileMenu');
-            this.classList.toggle('active');
-            mobileMenu.classList.toggle('active');
-        });
+        // Fetch booked dates from API for specific bungalow
+        async function loadBookedDates() {
+            try {
+                const bungalowSelect = document.getElementById('bungalow');
+                const selectedBungalow = bungalowSelect.value;
+                
+                // Only load dates if a bungalow is selected
+                if (selectedBungalow) {
+                    const url = `/api/booked-dates?bungalow=${encodeURIComponent(selectedBungalow)}`;
+                    const response = await fetch(url);
+                    const data = await response.json();
+                    bookedDates = data.booked_dates || [];
+                } else {
+                    bookedDates = [];
+                }
+                
+                renderCalendar();
+            } catch (error) {
+                console.error('Error loading booked dates:', error);
+                bookedDates = [];
+                renderCalendar();
+            }
+        }
 
-        document.querySelectorAll('.mobile-menu-links a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.getElementById('hamburgerBtn').classList.remove('active');
-                document.getElementById('mobileMenu').classList.remove('active');
+        // Render calendar widget
+        function renderCalendar() {
+            const today = new Date();
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+
+            let html = '<div class="calendar-grid">';
+            html += `<div class="calendar-header">
+                        <div class="calendar-month">${new Date(currentYear, currentMonth).toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' })}</div>
+                    </div>`;
+            
+            // Weekday headers
+            html += '<div class="weekdays">';
+            ['Pz', 'Pt', 'Sl', 'Ça', 'Pe', 'Cu', 'Pz'].forEach(day => {
+                html += `<div class="weekday">${day}</div>`;
             });
-        });
+            html += '</div>';
+
+            // Days
+            html += '<div class="days">';
+            
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const prevLastDay = new Date(currentYear, currentMonth, 0);
+            
+            // Previous month days
+            for (let i = firstDay.getDay() - 1; i >= 0; i--) {
+                const day = prevLastDay.getDate() - i;
+                html += `<div class="day other-month">${day}</div>`;
+            }
+
+            // Current month days
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isBooked = bookedDates.includes(dateStr);
+                const isToday = dateStr === todayStr;
+                
+                let classList = 'day';
+                if (isBooked) classList += ' booked';
+                if (isToday) classList += ' today';
+                
+                html += `<div class="${classList}" data-date="${dateStr}">${day}</div>`;
+            }
+
+            // Next month days
+            for (let day = 1; day <= 6 - lastDay.getDay(); day++) {
+                html += `<div class="day other-month">${day}</div>`;
+            }
+
+            html += '</div></div>';
+
+            document.getElementById('calendarWidget').innerHTML = html;
+            attachDateListeners();
+        }
+
+        // Attach click listeners to calendar dates
+        function attachDateListeners() {
+            const clickableDays = document.querySelectorAll('.day:not(.other-month):not(.booked)');
+            console.log(`Tıklanabilir gün sayısı: ${clickableDays.length}`);
+            
+            clickableDays.forEach(dayEl => {
+                dayEl.style.cursor = 'pointer';
+                dayEl.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Tarih tıklandı:', this.getAttribute('data-date'));
+                    const dateStr = this.getAttribute('data-date');
+                    
+                    // Check which input is focused
+                    const checkInInput = document.getElementById('checkInDate');
+                    const checkOutInput = document.getElementById('checkOutDate');
+                    
+                    // If checkIn is empty, select it first
+                    if (!checkInInput.value) {
+                        checkInInput.value = dateStr;
+                        checkOutInput.focus();
+                    } 
+                    // If checkIn is filled but checkOut is empty, select checkOut
+                    else if (!checkOutInput.value) {
+                        checkOutInput.value = dateStr;
+                    }
+                    // If both are filled, reset checkIn
+                    else {
+                        checkInInput.value = dateStr;
+                        checkOutInput.value = '';
+                        checkOutInput.focus();
+                    }
+                    
+                    updateSelectedDates();
+                });
+            });
+        }
+
+        // Update selected dates display
+        function updateSelectedDates() {
+            const checkInStr = document.getElementById('checkInDate').value;
+            const checkOutStr = document.getElementById('checkOutDate').value;
+
+            // Store in hidden inputs
+            document.getElementById('checkIn').value = checkInStr;
+            document.getElementById('checkOut').value = checkOutStr;
+
+            if (checkInStr && checkOutStr) {
+                const checkIn = new Date(checkInStr + 'T00:00:00');
+                const checkOut = new Date(checkOutStr + 'T00:00:00');
+
+                const dayIn = String(checkIn.getDate()).padStart(2, '0');
+                const monthIn = String(checkIn.getMonth() + 1).padStart(2, '0');
+                const yearIn = checkIn.getFullYear();
+
+                const dayOut = String(checkOut.getDate()).padStart(2, '0');
+                const monthOut = String(checkOut.getMonth() + 1).padStart(2, '0');
+                const yearOut = checkOut.getFullYear();
+
+                document.getElementById('checkInDisplaySpan').textContent = `${dayIn}.${monthIn}.${yearIn}`;
+                document.getElementById('checkOutDisplaySpan').textContent = `${dayOut}.${monthOut}.${yearOut}`;
+
+                const nights = Math.ceil((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                if (nights > 0) {
+                    document.getElementById('nightCount').textContent = `🌙 ${nights} Gece`;
+                    document.getElementById('selectedDates').classList.add('active');
+                }
+            }
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set minimum date for inputs
+            todayStr = getTodayString();
+            document.getElementById('checkInDate').setAttribute('min', todayStr);
+            document.getElementById('checkOutDate').setAttribute('min', todayStr);
+
+            // Date input change listener
+            ['checkInDate', 'checkOutDate'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateSelectedDates);
+            });
+
+            // Form submission
+            document.getElementById('reservationForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                if (!document.getElementById('checkIn').value || !document.getElementById('checkOut').value) {
+                    showError('Lütfen giriş ve çıkış tarihini seçiniz!');
+                    return;
+                }
+
+                const formData = {
+                    name: document.getElementById('name').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    checkIn: document.getElementById('checkIn').value,
+                    checkOut: document.getElementById('checkOut').value,
+                    guests: document.getElementById('guests').value,
+                    bungalow: document.getElementById('bungalow').value,
+                    notes: document.getElementById('notes').value
+                };
+
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('successMessage').style.display = 'none';
+                document.getElementById('errorMessage').style.display = 'none';
+
+                try {
+                    const response = await fetch('/api/reservation', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(formData)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        document.getElementById('loading').style.display = 'none';
+                        document.getElementById('successMessage').style.display = 'block';
+                        document.getElementById('reservationForm').reset();
+                        document.getElementById('selectedDates').classList.remove('active');
+                        document.getElementById('checkInDate').value = '';
+                        document.getElementById('checkOutDate').value = '';
+                        
+                        setTimeout(() => {
+                            document.getElementById('successMessage').style.display = 'none';
+                        }, 5000);
+                    } else {
+                        showError(result.message || 'Bir hata oluştu!');
+                    }
+                } catch (error) {
+                    showError('Sunucuya bağlanılamadı!');
+                    console.error('Error:', error);
+                }
+
+                document.getElementById('loading').style.display = 'none';
+            });
+
+            // Hamburger menu
+            document.getElementById('hamburgerBtn').addEventListener('click', function() {
+                const mobileMenu = document.getElementById('mobileMenu');
+                this.classList.toggle('active');
+                mobileMenu.classList.toggle('active');
+            });
+
+            document.querySelectorAll('.mobile-menu-links a').forEach(link => {
+                link.addEventListener('click', function() {
+                    document.getElementById('hamburgerBtn').classList.remove('active');
+                    document.getElementById('mobileMenu').classList.remove('active');
+                });
+            });
+
+            // Don't load booked dates on initial page load
+            // Wait for user to select a bungalow first
+        }); // End DOMContentLoaded
     </script>
 </body>
 </html>
