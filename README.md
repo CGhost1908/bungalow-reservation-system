@@ -220,7 +220,13 @@ Sorunlar veya öneriler için lütfen iletişime geçin:
 - Email: berkayseyman@gmail.com
 - Admin: Berkay Seyman
 
+- Email: bilalberkeceylan@gmail.com
+- Admin: Bilal Berke Ceylan
+
+- Email: erenbatialtunkapak@gmail.com
+- Admin: Eren Batı Altunkapak
+
 ---
 
-**Sürüm**: 1.0.0  
-**Son Güncelleme**: Aralık 2024
+**Sürüm**: 1.0.8
+**Son Güncelleme**: Şubat 2026
